@@ -16,7 +16,11 @@ def test_split_deterministic():
     assert all(x.equals(y) for x,y in zip(a,b))
 
 def test_invalid_scheme_range_fails():
-    schemes = pd.DataFrame({c: [None] for c in SCHEME_COLUMNS})
+    schemes = pd.DataFrame({
+    c: [float('nan')] if c in ['min_age','max_age','max_income','min_loan_amount','max_loan_amount','interest_rate']
+    else [None]
+    for c in SCHEME_COLUMNS
+})
     schemes[['scheme_id','scheme_name']] = [['S1','Demo']]
     schemes[['min_loan_amount','max_loan_amount']] = [[100, 50]]
     with pytest.raises(ValueError): validate_scheme_data(schemes)
