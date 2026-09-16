@@ -43,3 +43,23 @@ On the real dataset, the SC profile's top results included `bls`, `tls-delhi`, `
 ## Phase 8.1 ranking calibration
 
 Target-group evidence now breaks ties only after semantic/domain relevance is considered. Thus a relevant business scheme with general or unknown target evidence can outrank a weakly relevant SC/ST-targeted scheme, while matched SC/ST evidence still strengthens similarly relevant candidates. The API exposes `target_group_reason` alongside the existing target-group fields. Three calibrated SC inference runs averaged 2.009428 seconds across 3,397 schemes.
+
+## Phase 8.2 calibrated ranking
+
+Relevance is tiered before target-group ordering: `strongly_relevant`, `relevant`, `weakly_relevant`, or `unrelated`. Strong relevance requires at least three evaluable intent groups, at least 75% intent overlap, and at least four of nine structured criteria evidenced; relevant requires at least two evaluable intent groups, at least 50% overlap, and at least two structured criteria evidenced. Target-group priority is applied only within comparable tiers, so a weak or unrelated SC/ST-targeted scheme cannot outrank a strongly relevant general scheme. The API exposes `relevance_tier`, target-group fields, and ranking reasons.
+
+Three calibrated SC inference runs averaged 4.909529 seconds across 3,397 schemes (minimum 4.733749, maximum 5.041060). This is runtime only; no supervised model or approval metric is involved.
+
+## Phase 8.3 semantic relevance precision
+
+Semantic relevance now removes generic tokens such as `business`, `loan`, `scheme`, `support`, `SC`, and `ST` from domain matching. Specific domain tokens and structured category/purpose evidence are required for meaningful matches; social-category evidence is handled only by target-group logic. Generic-only matches are capped below a perfect relevance score, and agriculture, transport, and education domains require corresponding profile intent. Five focused Phase 8.3 tests cover these distinctions. Three load-inclusive SC inference runs averaged 1.956604 seconds across 3,397 schemes.
+
+## Phase 8.4 relevance calibration
+
+Relevance now uses weighted evidence by field: exact structured domain or supported-purpose matches score strongest, related category matches score medium, descriptive text matches score lower, and generic business-purpose matches score weakly. SC/ST terms are excluded from semantic relevance and remain target-group evidence only. Relevance evidence and matched groups are returned for explanation. Generic small-business profiles no longer receive perfect relevance for broad categories, while explicit agriculture, transport, and education intent can produce strong relevance when supported by the dataset.
+
+Three load-inclusive SC inference runs averaged 5.032936 seconds across 3,397 schemes (minimum 4.729977, maximum 5.236456). This is a runtime measurement only.
+
+## Phase 8.5 relevance evidence sanity
+
+Structured domain or purpose matches are now classified as corroborated only when supported by scheme name/description text. Structured-only evidence is medium strength, generic overlap is weak, and contradictory domain evidence is explicitly recorded. Relevance evidence exposes source fields, strength, corroboration, and contradiction. In the SC manual API checks, generic business returned 25/weakly_relevant, agriculture returned 72.5/relevant, and transport returned 27.5/weakly_relevant. Three load-inclusive SC runs averaged 5.979209 seconds across 3,397 schemes.
