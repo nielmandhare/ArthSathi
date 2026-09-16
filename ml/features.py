@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 from .recommender import BeneficiaryProfile, CRITERIA, evaluate_scheme
+from .relevance import evaluate_relevance
 
 def _profile(value):
     return value if isinstance(value, BeneficiaryProfile) else BeneficiaryProfile.from_mapping(value)
@@ -10,6 +11,7 @@ def _profile(value):
 def generate_pair_features(profile, scheme):
     """Create deterministic features from explicit structured compatibility only."""
     result = evaluate_scheme(_profile(profile), scheme)
+    relevance = evaluate_relevance(_profile(profile), scheme)
     unmet = set(result["unmet_criteria"])
     unknown = set(result["verification_required"])
     features = {"scheme_id": result["scheme_id"], "scheme_name": result["scheme_name"], "eligibility_status": result["eligibility_status"]}
@@ -19,7 +21,8 @@ def generate_pair_features(profile, scheme):
     features["match_score"] = result["match_score"]
     features["compatibility_score"] = result["compatibility_score"]
     features["evidence_coverage"] = result["evidence_coverage"]
-    features["ranking_score"] = result["ranking_score"]
+    features["relevance_score"] = relevance["relevance_score"]
+    features["ranking_score"] = round(result["compatibility_score"] * result["evidence_coverage"] * relevance["relevance_score"] / 10000, 2)
     return features
 
 def build_feature_matrix(profile, schemes):

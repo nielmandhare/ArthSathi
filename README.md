@@ -14,7 +14,11 @@ The match score/model output is not government approval or approval probability.
 
 Read-only validation of `data/schemes_master.csv` found 3,397 rows × 60 columns, zero duplicate scheme IDs, zero invalid numeric ranges, and no malformed structured list fields. Education, business type, project-cost ranges, and source references are consistently unavailable; source-reference presence is 0/3,397. Missing and unknown profile fields remain verification-required or are excluded when a known constraint is not met. Boundary, sparse, invalid, unknown-category, large-value, deterministic, JSON-safety, and no-result cases are covered by Phase 5 tests.
 
-On the current environment, three load-inclusive real-dataset inference runs averaged 0.672311 seconds (minimum 0.644860, maximum 0.691130) across 3,397 schemes. This is a baseline measurement, not an ML performance metric. A live Uvicorn smoke request to `POST /api/recommendations` returned HTTP 200 with the stable JSON contract.
+On the current environment, three load-inclusive real-dataset inference runs averaged 0.687492 seconds (minimum 0.666324, maximum 0.701596) across 3,397 schemes. This is a baseline measurement, not an ML performance metric. A live Uvicorn smoke request to `POST /api/recommendations` returned HTTP 200 with the stable JSON contract.
+
+## Phase 6 evidence-aware ranking
+
+Phase 5 exposed a sparse-evidence issue: compatibility was calculated only over available criteria, so one passing criterion could produce 100. Phase 6 preserves `match_score` as the compatibility score and adds `evidence_coverage` (`evaluated criteria / 9 total criteria`) and `ranking_score` (`compatibility_score × evidence_coverage / 100`). Final ordering uses ranking score, evidence coverage, compatibility, then stable `scheme_id` tie-breaking. Unknown criteria are listed in `verification_required` with grounded explanations, and missing data never becomes a passed criterion. A score of 100 is not approval, confidence, or a probability; results remain recommendations for further verification.
 
 ## Phase 4 inference API
 
