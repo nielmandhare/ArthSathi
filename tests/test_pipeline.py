@@ -14,3 +14,9 @@ def test_deterministic():
 def test_split_deterministic():
     a=split_data(sample()); b=split_data(sample())
     assert all(x.equals(y) for x,y in zip(a,b))
+
+def test_invalid_scheme_range_fails():
+    schemes = pd.DataFrame({c: [None] for c in SCHEME_COLUMNS})
+    schemes[['scheme_id','scheme_name']] = [['S1','Demo']]
+    schemes[['min_loan_amount','max_loan_amount']] = [[100, 50]]
+    with pytest.raises(ValueError): validate_scheme_data(schemes)

@@ -39,6 +39,10 @@ def transform_data(df, preprocessor=None, fit=True):
     values = p.fit_transform(df) if fit else p.transform(df)
     return values, p
 
+def transform_with_fitted_preprocessor(df, preprocessor):
+    """Transform a later split using a preprocessor fitted on training data."""
+    return transform_data(df, preprocessor=preprocessor, fit=False)[0]
+
 def split_data(df, train_ratio=.7, validation_ratio=.15, seed=42):
     if train_ratio <= 0 or validation_ratio < 0 or train_ratio + validation_ratio >= 1: raise ValueError('ratios must leave a positive test split')
     shuffled = df.sample(frac=1, random_state=seed)
