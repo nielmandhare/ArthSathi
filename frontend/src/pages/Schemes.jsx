@@ -19,10 +19,11 @@ export default function Schemes() {
   const [compare, setCompare] = useState([]);
 
   useEffect(() => {
+    const { profile, requirement } = state;
     const controller = new AbortController();
     setRecommendations(null);
     setLoadError(null);
-    fetchRecommendations(state, { signal: controller.signal })
+    fetchRecommendations({ profile, requirement }, { signal: controller.signal })
       .then((data) => setRecommendations(data.recommendations))
       .catch((error) => {
         if (error?.name !== 'AbortError') setLoadError(error);
