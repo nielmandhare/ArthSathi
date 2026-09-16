@@ -18,10 +18,15 @@ const EXTRA = {
 };
 
 export default function Applications() {
-  const { state, toggleScheme, setDoc, setSubmitted } = useApp();
+  const { state, toggleScheme, setDoc, setSubmitted, recommendations } = useApp();
   const [justSubmitted, setJustSubmitted] = useState(false);
 
   const selected = SCHEMES.filter((s) => state.selected.includes(s.id));
+  const selectedLive = (recommendations || []).filter((s) => state.selected.includes(s.scheme_id));
+  const knownIds = new Set([...SCHEMES.map((s) => s.id), ...selectedLive.map((s) => s.scheme_id)]);
+  const unresolvedLive = state.selected
+    .filter((id) => !knownIds.has(id))
+    .map((scheme_id) => ({ scheme_id, scheme_name: 'Live recommendation' }));
   const rows = useMemo(
     () =>
       selected.map((s) => {
@@ -32,13 +37,18 @@ export default function Applications() {
       }),
     [selected, state.docs, state.requirement, state.verified]
   );
-  const readyCount = rows.filter((r) => r.ready).length;
+  const liveRows = useMemo(
+    () => [...selectedLive, ...unresolvedLive].map((scheme) => ({ scheme, live: true, ready: false })),
+    [selectedLive, unresolvedLive]
+  );
+  const allRows = [...rows, ...liveRows];
+  const readyCount = allRows.filter((r) => r.ready).length;
 
   const submit = () => {
-    if (!rows.length) return;
+    if (!allRows.length) return;
     setSubmitted(true);
     setJustSubmitted(true);
-    toast.success('Applications prepared', { description: `${readyCount} application${readyCount === 1 ? '' : 's'} ready to submit through the applicable channels.` });
+    toast.success('Applications prepared', { description: `${readyCount} application${readyCount === 1 ? '' : 's'} ready to prepare through the applicable channels.` });
   };
 
   if (justSubmitted) {
@@ -49,7 +59,7 @@ export default function Applications() {
             <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success text-white"><CheckCircle2 size={30} /></span>
             <h1 className="mt-6 font-display text-3xl font-extrabold">Applications ready to submit</h1>
             <p className="mt-3 text-sm leading-relaxed text-sage">
-              <strong className="num">{readyCount} of {rows.length}</strong> applications are complete. Submission happens
+              <strong className="num">{readyCount} of {allRows.length}</strong> applications are complete. Submission happens
               through the <strong>applicable external application channels</strong> — the scheme portal or your channel partner.
               SahaySetu prepares your file; it does not act as the government authority.
             </p>
@@ -75,6 +85,25 @@ export default function Applications() {
       <section className="container-x mt-10 space-y-10">
         <div>
           <Reveal><h2 className="font-display text-lg font-bold">1 · Choose schemes</h2></Reveal>
+          {selectedLive.length > 0 && (
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {selectedLive.map((s) => (
+                <motion.button
+                  variants={staggerItem}
+                  key={s.scheme_id}
+                  onClick={() => toggleScheme(s.scheme_id)}
+                  data-testid={`apply-select-${s.scheme_id}`}
+                  className="card-premium flex items-center justify-between gap-3 border-pine p-5 text-left shadow-[0_0_0_2px_#0A3B2C]"
+                >
+                  <div>
+                    <p className="font-display text-sm font-bold">{s.scheme_name}</p>
+                    <p className="mt-0.5 text-xs text-sage">Live recommendation · ID {s.scheme_id}</p>
+                  </div>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-pine bg-pine text-white"><CheckCircle2 size={16} /></span>
+                </motion.button>
+              ))}
+            </div>
+          )}
           <Stagger className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {SCHEMES.slice(0, 6).map((s) => {
               const on = state.selected.includes(s.id);
@@ -99,7 +128,7 @@ export default function Applications() {
           </Stagger>
         </div>
 
-        {rows.length > 0 && (
+        {allRows.length > 0 && (
           <div>
             <Reveal><h2 className="font-display text-lg font-bold">2 · Requirement matrix</h2>
             <p className="mt-1 text-sm text-sage">What is reused, what each scheme still needs, and whether that application is ready.</p></Reveal>
@@ -116,7 +145,15 @@ export default function Applications() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {rows.map(({ scheme: s, extra, ready, elig }) => (
+                    {allRows.map(({ scheme: s, live, extra, ready, elig }) => live ? (
+                      <tr key={s.scheme_id} className="align-top">
+                        <td className="p-4"><Link to={`/schemes/${s.scheme_id}`} className="font-display font-bold hover:text-pine">{s.scheme_name}</Link><p className="mt-1 text-xs text-sage">Live recommendation · ID {s.scheme_id}</p></td>
+                        <td className="p-4"><span className="inline-flex items-center gap-1.5 rounded-full bg-pine/5 px-3 py-1 text-[11px] font-bold text-pine"><UserRound size={12} /> From your profile</span><p className="mt-1.5 text-xs text-sage">Profile data is reused locally for preparation.</p></td>
+                        <td className="p-4"><span className="text-xs font-semibold text-sage">Not provided by recommendation service</span></td>
+                        <td className="p-4"><span className="text-xs font-semibold text-sage">{s.eligibility_status || 'Unavailable'}</span></td>
+                        <td className="p-4 text-right"><span className="inline-flex rounded-full bg-clay/10 px-3 py-1 text-[11px] font-bold text-clay">Preparation only</span></td>
+                      </tr>
+                    ) : (
                       <tr key={s.id} className="align-top">
                         <td className="p-4">
                           <p className="font-display font-bold">{s.name}</p>
@@ -159,12 +196,12 @@ export default function Applications() {
           </div>
         )}
 
-        {rows.length > 0 && (
+        {allRows.length > 0 && (
           <Reveal className="card-premium flex flex-col items-start justify-between gap-5 p-6 sm:flex-row sm:items-center sm:p-8" data-testid="application-review">
             <div>
               <h2 className="font-display text-lg font-bold">3 · Review & submit</h2>
               <p className="mt-1 text-sm text-sage">
-                <strong className="num">{readyCount} of {rows.length}</strong> applications ready · scheme-specific fields kept separate for each.
+                <strong className="num">{readyCount} of {allRows.length}</strong> applications ready · scheme-specific fields kept separate for each.
               </p>
             </div>
             <button onClick={submit} className="btn-accent" data-testid="submit-applications-btn">
@@ -174,7 +211,7 @@ export default function Applications() {
         )}
 
         <AnimatePresence>
-          {rows.length === 0 && (
+          {allRows.length === 0 && (
             <Reveal className="card-premium p-12 text-center" data-testid="applications-empty">
               <p className="font-display text-xl font-bold">No schemes selected yet.</p>
               <p className="mx-auto mt-2 max-w-md text-sm text-sage">Pick at least one scheme above — your profile will be reused across all of them.</p>
