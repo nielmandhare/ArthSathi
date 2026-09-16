@@ -27,7 +27,7 @@ const defaults = {
   selected: ['pm-vishwakarma', 'mudra-kishor'],
   docs: {},
   submitted: false,
-  storySubmitted: false,
+    storySubmitted: false,
 };
 
 export function AppProvider({ children }) {
@@ -39,6 +39,7 @@ export function AppProvider({ children }) {
       return defaults;
     }
   });
+  const [recommendations, setRecommendations] = useState(null);
 
   useEffect(() => {
     try { localStorage.setItem(LS, JSON.stringify(s)); } catch {}
@@ -57,6 +58,8 @@ export function AppProvider({ children }) {
     setDoc: (key, val) => setS((x) => ({ ...x, docs: { ...x.docs, [key]: val } })),
     setSubmitted: (v) => setS((x) => ({ ...x, submitted: v })),
     setStorySubmitted: (v) => setS((x) => ({ ...x, storySubmitted: v })),
+    recommendations,
+    setRecommendations,
   };
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;

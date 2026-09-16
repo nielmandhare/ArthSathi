@@ -6,10 +6,13 @@ import { PageHeader, TrustNote, MatchRing, FreshnessBadge } from '../components/
 import { SchemeNav, useScheme } from '../components/SchemeNav';
 import { useApp } from '../context/AppContext';
 import { motion } from 'framer-motion';
+import { LiveWhy, UnknownScheme } from '../components/LiveSchemeView';
 
 export default function WhyScheme() {
   const scheme = useScheme();
   const { state } = useApp();
+  if (!scheme) return <PageWrap><UnknownScheme /></PageWrap>;
+  if (scheme.scheme_id) return <PageWrap><PageHeader eyebrow="Live recommendation evidence" title={`Why ${scheme.scheme_name}?`} desc="Evidence returned by the recommendation service." step="why" /><SchemeNav /><LiveWhy scheme={scheme} /></PageWrap>;
 
   return (
     <PageWrap>

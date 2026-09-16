@@ -6,6 +6,7 @@ import { PageWrap, Reveal, LiveNumber } from '../components/motion';
 import { PageHeader, TrustNote, FreshnessBadge } from '../components/widgets';
 import { SchemeNav, useScheme } from '../components/SchemeNav';
 import { useApp } from '../context/AppContext';
+import { LiveCalculator, UnknownScheme } from '../components/LiveSchemeView';
 
 function emi(p, annualRate, years) {
   const r = annualRate / 1200;
@@ -20,9 +21,9 @@ export default function Calculator() {
   const { state } = useApp();
   const [income, setIncome] = useState(state.profile.monthlyIncome);
   const [oblig, setOblig] = useState(state.profile.existingEmi);
-  const [loan, setLoan] = useState(Math.min(state.requirement.loanAmount, scheme.maxLoan));
-  const [rate, setRate] = useState(scheme.rate);
-  const [years, setYears] = useState(scheme.tenureYears);
+  const [loan, setLoan] = useState(Math.min(state.requirement.loanAmount, scheme?.maxLoan ?? 0));
+  const [rate, setRate] = useState(scheme?.rate ?? 0);
+  const [years, setYears] = useState(scheme?.tenureYears ?? 0);
 
   const res = useMemo(() => {
     const e = Math.round(emi(loan, rate, years));
@@ -32,6 +33,9 @@ export default function Calculator() {
     const comfortable = remaining >= 0 && ratio <= 0.4;
     return { e, remaining, comfortable };
   }, [income, oblig, loan, rate, years]);
+
+  if (!scheme) return <PageWrap><UnknownScheme /></PageWrap>;
+  if (scheme.scheme_id) return <PageWrap><PageHeader eyebrow="Financial information" title={`Financial information for ${scheme.scheme_name}`} desc="Unsupported financial terms are not estimated." step="financial" /><SchemeNav /><LiveCalculator scheme={scheme} /></PageWrap>;
 
   const Field = ({ label, value, onChange, prefix, suffix, schemeParam }) => (
     <label className="block" data-testid={`calc-field-${label.toLowerCase().replace(/\s|\(|\)|%/g, '-')}`}>

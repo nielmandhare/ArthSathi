@@ -11,8 +11,7 @@ import { useApp } from '../context/AppContext';
 const FILTERS = ['All', 'Loans', 'Subsidy', 'Women', 'Artisans', 'Vendors'];
 
 export default function Schemes() {
-  const { state, toggleScheme } = useApp();
-  const [recommendations, setRecommendations] = useState(null);
+  const { state, toggleScheme, recommendations, setRecommendations } = useApp();
   const [loadError, setLoadError] = useState(null);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState('All');

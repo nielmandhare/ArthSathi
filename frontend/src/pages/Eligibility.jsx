@@ -6,6 +6,7 @@ import { PageHeader, TrustNote, EligibilityBadge, FreshnessBadge } from '../comp
 import { SchemeNav, useScheme } from '../components/SchemeNav';
 import { useApp } from '../context/AppContext';
 import { motion } from 'framer-motion';
+import { LiveEligibility, UnknownScheme } from '../components/LiveSchemeView';
 
 const MESSAGES = {
   likely: 'Your information appears to meet the criteria we currently hold for this scheme.',
@@ -16,6 +17,8 @@ const MESSAGES = {
 export default function Eligibility() {
   const scheme = useScheme();
   const { state } = useApp();
+  if (!scheme) return <PageWrap><UnknownScheme /></PageWrap>;
+  if (scheme.scheme_id) return <PageWrap><PageHeader eyebrow="Live recommendation status" title={`Eligibility information for ${scheme.scheme_name}`} desc="Available eligibility evidence from the recommendation service." step="eligibility" /><SchemeNav /><LiveEligibility scheme={scheme} /></PageWrap>;
   const { status, rows } = eligibilityFor(scheme, state.requirement, state.verified);
 
   const profileBits = [

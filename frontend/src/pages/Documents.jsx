@@ -6,16 +6,19 @@ import { PageWrap, Reveal, Stagger, staggerItem } from '../components/motion';
 import { PageHeader, TrustNote, FreshnessBadge } from '../components/widgets';
 import { SchemeNav, useScheme } from '../components/SchemeNav';
 import { useApp } from '../context/AppContext';
+import { LiveDocuments, UnknownScheme } from '../components/LiveSchemeView';
 
 export default function Documents() {
   const scheme = useScheme();
   const { state, setDoc } = useApp();
-
   const ready = useMemo(
-    () => scheme.documents.filter((d) => state.docs[`${scheme.id}:${d.name}`]).length,
+    () => (scheme?.documents ?? []).filter((d) => state.docs[`${scheme.id}:${d.name}`]).length,
     [scheme, state.docs]
   );
-  const pct = Math.round((ready / scheme.documents.length) * 100);
+  const pct = scheme?.documents?.length ? Math.round((ready / scheme.documents.length) * 100) : 0;
+
+  if (!scheme) return <PageWrap><UnknownScheme /></PageWrap>;
+  if (scheme.scheme_id) return <PageWrap><PageHeader eyebrow="Documents" title={`Documents for ${scheme.scheme_name}`} desc="Only document information returned by the recommendation service is shown." step="documents" /><SchemeNav /><LiveDocuments scheme={scheme} /></PageWrap>;
 
   return (
     <PageWrap>

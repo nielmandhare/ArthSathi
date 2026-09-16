@@ -5,9 +5,12 @@ import { PageWrap, Reveal, Stagger, staggerItem } from '../components/motion';
 import { PageHeader, FreshnessBadge, TrustNote, MatchRing } from '../components/widgets';
 import { SchemeNav, useScheme } from '../components/SchemeNav';
 import { motion } from 'framer-motion';
+import { LiveDetail, UnknownScheme } from '../components/LiveSchemeView';
 
 export default function SchemeDetail() {
   const scheme = useScheme();
+  if (!scheme) return <PageWrap><UnknownScheme /></PageWrap>;
+  if (scheme.scheme_id) return <PageWrap><PageHeader eyebrow="Live recommendation" title={scheme.scheme_name} desc="Recommendation information returned by the ML service." /><SchemeNav /><LiveDetail scheme={scheme} /></PageWrap>;
 
   const stats = [
     { icon: IndianRupee, label: 'Loan amount', value: scheme.loanWindow },
