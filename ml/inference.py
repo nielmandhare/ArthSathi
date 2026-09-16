@@ -1,5 +1,6 @@
 """Production inference flow for deterministic scheme recommendations."""
 from pathlib import Path
+from functools import lru_cache
 import math
 
 from .pipeline import load_scheme_data, validate_scheme_data
@@ -10,6 +11,14 @@ from .target_groups import evaluate_target_group
 from .calibration import classify_relevance
 
 DEFAULT_SCHEME_PATH = Path(__file__).resolve().parents[1] / "data" / "schemes_master.csv"
+
+@lru_cache(maxsize=4)
+def _static_scheme_resources(data_path):
+    """Load and validate dataset-only resources once per ML process."""
+    frame = load_scheme_data(data_path)
+    validate_scheme_data(frame)
+    ranker = StructuredSimilarityRanker(top_k=len(frame)).fit(frame)
+    return frame, ranker
 
 def _safe(value):
     if value is None or (isinstance(value, float) and (math.isnan(value) or math.isinf(value))): return None
@@ -22,9 +31,8 @@ def _profile_dict(profile):
 
 def recommend_schemes(profile, top_k=10, data_path=None):
     if not isinstance(top_k, int) or top_k < 0: raise ValueError("top_k must be a non-negative integer")
-    frame = load_scheme_data(data_path or DEFAULT_SCHEME_PATH)
-    validate_scheme_data(frame)
-    ranker = StructuredSimilarityRanker(top_k=len(frame)).fit(frame)
+    static_path = str(Path(data_path or DEFAULT_SCHEME_PATH).resolve())
+    frame, ranker = _static_scheme_resources(static_path)
     ranked = ranker.rank(profile, top_k=len(frame))
     by_id = {str(row["scheme_id"]): row for _, row in frame.iterrows()}
     results = []
