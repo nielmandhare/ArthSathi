@@ -25,3 +25,21 @@ Phase 5 exposed a sparse-evidence issue: compatibility was calculated only over 
 `ml/inference.py` loads and validates `data/schemes_master.csv`, evaluates each scheme with the Phase 2 structured rules, and uses the stateless Phase 3 ranker for deterministic ordering. It returns only non-`criteria_not_met` results, preserves verification-required status, and includes source metadata. No training or artifact loading occurs during inference.
 
 Run locally with `uvicorn api:app --reload`. The endpoint is `POST /api/recommendations`; send the beneficiary profile fields as JSON, for example `{"age":30,"income":200000,"location":"Maharashtra","social_category":"OBC","education":"graduate","business_type":"tailoring","loan_purpose":"working_capital","project_cost":100000,"required_loan_amount":50000}`. The response contains `profile`, `results`, and `total_candidates`; each result contains the scheme identity, compatibility score, eligibility status, reasons, unmet criteria, verification-required fields, and source references. The match score is a criteria-compatibility score, never approval probability or a government decision.
+
+## Phase 7 semantic relevance
+
+Relevance is separate from eligibility. The signal uses populated canonical fields: scheme name, official name, descriptions, category, subcategory, tags, supported purposes, and state/state requirement. It tokenizes normalized text and checks deterministic overlap with business type, loan purpose, location, and social category. Category-level domain signals prevent agriculture-only or education-only categories from receiving business-domain relevance merely because a description contains a broad word such as “business”. Empty fields remain unknown and do not create eligibility.
+
+The final ranking score is `compatibility_score × evidence_coverage × relevance_score / 10000`. Compatibility measures evaluated structured criteria, evidence coverage measures evaluated criteria out of nine, and relevance measures documented intent/domain overlap. Relevance can improve ordering but cannot turn a failed criterion into eligibility. Outputs remain recommendations for verification, not approval decisions or approval probabilities.
+
+Three load-inclusive Phase 7 runs over all 3,397 schemes averaged 1.364697 seconds (minimum 1.353408, maximum 1.385012), compared with the Phase 6 baseline of approximately 0.687 seconds. The extra cost comes from deterministic text tokenization; no model is trained and no semantic artifact is rebuilt outside the request path.
+
+## Phase 8 target-group-aware ranking
+
+Target-group evidence is separate from both eligibility and semantic relevance. `ml/target_groups.py` uses explicit `social_categories`, structured `gender`, and clearly stated Scheduled Caste/Tribe or women-targeting phrases. SC/ST variants are normalized. Missing or ambiguous target data is `unknown`, not ineligible. For ranking, matched target groups receive deterministic priority before the Phase 7 ranking score; unknown/general schemes remain candidates, while reliable non-matches are deprioritized. The response exposes `target_group_match`, `target_group_score`, and `target_group_evidence`. These fields describe ranking evidence only and do not indicate approval, confidence, or probability.
+
+On the real dataset, the SC profile's top results included `bls`, `tls-delhi`, `acandabc`, `cegssc`, and `cmegp`, all with matched SC evidence. The ST profile's top results included `cmegp`, `sclcss`, `cts-maharashtra`, `aif`, and `ap`, all with matched ST evidence. Three load-inclusive SC inference runs averaged 1.949705 seconds across 3,397 schemes. This is a runtime measurement, not a recommendation-quality or approval metric.
+
+## Phase 8.1 ranking calibration
+
+Target-group evidence now breaks ties only after semantic/domain relevance is considered. Thus a relevant business scheme with general or unknown target evidence can outrank a weakly relevant SC/ST-targeted scheme, while matched SC/ST evidence still strengthens similarly relevant candidates. The API exposes `target_group_reason` alongside the existing target-group fields. Three calibrated SC inference runs averaged 2.009428 seconds across 3,397 schemes.

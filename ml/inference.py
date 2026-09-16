@@ -6,6 +6,7 @@ from .pipeline import load_scheme_data, validate_scheme_data
 from .recommender import BeneficiaryProfile, evaluate_scheme
 from .models import StructuredSimilarityRanker
 from .relevance import evaluate_relevance
+from .target_groups import evaluate_target_group
 
 DEFAULT_SCHEME_PATH = Path(__file__).resolve().parents[1] / "data" / "schemes_master.csv"
 
@@ -30,10 +31,15 @@ def recommend_schemes(profile, top_k=10, data_path=None):
         row = by_id[str(ranked_row["scheme_id"])]
         result = evaluate_scheme(profile, row)
         if result["eligibility_status"] == "criteria_not_met": continue
-        relevance = evaluate_relevance(profile, row)
-        result["relevance_score"] = relevance["relevance_score"]
+        result["relevance_score"] = _safe(ranked_row["relevance_score"])
+        target = evaluate_target_group(profile, row)
+        result.update({k: _safe(target[k]) for k in ("target_group_match", "target_group_score", "target_group_evidence")})
+        result["target_group_reason"] = target["target_group_reason"]
         result["ranking_score"] = round(result["compatibility_score"] * result["evidence_coverage"] * result["relevance_score"] / 10000, 2)
-        result["reasons"].extend(relevance["relevance_reasons"])
+        if len(results) < top_k:
+            relevance = evaluate_relevance(profile, row)
+            result["reasons"].extend(relevance["relevance_reasons"])
+            if target["target_group_match"] in ("matched", "not_matched"): result["reasons"].append(target["target_group_reason"])
         result.update({k: _safe(row.get(k)) for k in ("source_reference", "source_name", "source_url")})
         results.append({k: _safe(v) for k, v in result.items()})
     return {"profile": _profile_dict(profile), "results": results[:top_k], "total_candidates": len(frame)}
