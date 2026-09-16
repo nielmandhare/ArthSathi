@@ -7,11 +7,18 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 BENEFICIARY_COLUMNS = ['beneficiary_id','age','income','location','social_category','education','business_type','loan_purpose','project_cost','required_loan_amount']
 SCHEME_COLUMNS = ['scheme_id','scheme_name','min_age','max_age','max_income','social_categories','locations','education_requirements','business_types','loan_purposes','min_loan_amount','max_loan_amount','interest_rate','source_reference']
+SCHEME_MASTER_COLUMNS = ['scheme_id','scheme_name','minimum_age','maximum_age','income_max','social_categories','state','education','business_type','supported_purposes','loan_amount_min','loan_amount_max','interest_rate','source_reference']
 NUMERIC = ['age','income','project_cost','required_loan_amount']
 CATEGORICAL = ['location','social_category','education','business_type','loan_purpose']
 
 def load_beneficiary_data(path): return pd.read_csv(path)
-def load_scheme_data(path): return pd.read_csv(path)
+def load_scheme_data(path):
+    """Load the canonical schemes_master.csv source and normalize its contract."""
+    raw = pd.read_csv(path)
+    missing = [c for c in SCHEME_MASTER_COLUMNS if c not in raw.columns]
+    if missing: raise ValueError(f'scheme master missing required columns: {missing}')
+    normalized = raw.rename(columns={'minimum_age':'min_age','maximum_age':'max_age','income_max':'max_income','state':'locations','education':'education_requirements','business_type':'business_types','supported_purposes':'loan_purposes','loan_amount_min':'min_loan_amount','loan_amount_max':'max_loan_amount'})
+    return normalized
 
 def _validate(df, required, name):
     missing = [c for c in required if c not in df.columns]
