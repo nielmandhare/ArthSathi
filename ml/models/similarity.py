@@ -21,7 +21,7 @@ class StructuredSimilarityRanker:
         if frame is None: raise ValueError("fit must be called or schemes supplied")
         features = build_feature_matrix(profile, frame)
         features = features[features["eligibility_status"] != "criteria_not_met"]
-        ranked = features.sort_values(["match_score", "scheme_id"], ascending=[False, True], kind="mergesort")
+        ranked = features.sort_values(["ranking_score", "evidence_coverage", "match_score", "scheme_id"], ascending=[False, False, False, True], kind="mergesort")
         return ranked.head(self.top_k if top_k is None else top_k).reset_index(drop=True)
 
     def predict(self, profile, schemes=None):

@@ -62,6 +62,7 @@ def _bounded(value, lower, upper):
 def _check(name, matched, reason, unmet, unknown, reasons):
     if matched is True: reasons.append(reason); return 1, False
     if matched is False: unmet.append(name); return 1, True
+    reasons.append(f"{name.replace('_', ' ').capitalize()} could not be verified from available scheme data")
     unknown.append(name); return 0, False
 
 def evaluate_scheme(profile, scheme):
@@ -85,10 +86,14 @@ def evaluate_scheme(profile, scheme):
     for name, matched, reason in checks:
         n, failed = _check(name, matched, reason, unmet, unknown, reasons)
         evaluated += n; satisfied += n - int(failed)
+    evidence_coverage = round(100 * evaluated / len(CRITERIA), 2)
+    compatibility_score = round(100 * satisfied / evaluated, 2) if evaluated else 0.0
+    ranking_score = round(compatibility_score * evidence_coverage / 100, 2)
     status = STATUS_NOT_MET if unmet else (STATUS_VERIFY if unknown else STATUS_LIKELY)
     return {
         "scheme_id": row.get("scheme_id"), "scheme_name": row.get("scheme_name"),
-        "match_score": round(100 * satisfied / evaluated, 2) if evaluated else 0.0,
+        "match_score": compatibility_score, "compatibility_score": compatibility_score,
+        "evidence_coverage": evidence_coverage, "ranking_score": ranking_score,
         "eligibility_status": status, "reasons": reasons, "unmet_criteria": unmet,
         "verification_required": unknown,
     }

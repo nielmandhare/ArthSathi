@@ -10,6 +10,12 @@ Inspection of `schemes_master.csv` found no legitimate beneficiary outcome targe
 
 The match score/model output is not government approval or approval probability. It measures structured compatibility only. Ambiguous or missing fields remain unknown and require verification; free-text eligibility is not converted into strict rules. Real beneficiary outcome data and a documented target definition are required before supervised learning or meaningful precision/recall/F1/AUC evaluation is valid.
 
+## Phase 5 validation
+
+Read-only validation of `data/schemes_master.csv` found 3,397 rows × 60 columns, zero duplicate scheme IDs, zero invalid numeric ranges, and no malformed structured list fields. Education, business type, project-cost ranges, and source references are consistently unavailable; source-reference presence is 0/3,397. Missing and unknown profile fields remain verification-required or are excluded when a known constraint is not met. Boundary, sparse, invalid, unknown-category, large-value, deterministic, JSON-safety, and no-result cases are covered by Phase 5 tests.
+
+On the current environment, three load-inclusive real-dataset inference runs averaged 0.672311 seconds (minimum 0.644860, maximum 0.691130) across 3,397 schemes. This is a baseline measurement, not an ML performance metric. A live Uvicorn smoke request to `POST /api/recommendations` returned HTTP 200 with the stable JSON contract.
+
 ## Phase 4 inference API
 
 `ml/inference.py` loads and validates `data/schemes_master.csv`, evaluates each scheme with the Phase 2 structured rules, and uses the stateless Phase 3 ranker for deterministic ordering. It returns only non-`criteria_not_met` results, preserves verification-required status, and includes source metadata. No training or artifact loading occurs during inference.

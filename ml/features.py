@@ -17,6 +17,9 @@ def generate_pair_features(profile, scheme):
         features[f"{criterion}_match"] = np.nan if criterion in unknown else int(criterion not in unmet)
         features[f"{criterion}_known"] = int(criterion not in unknown)
     features["match_score"] = result["match_score"]
+    features["compatibility_score"] = result["compatibility_score"]
+    features["evidence_coverage"] = result["evidence_coverage"]
+    features["ranking_score"] = result["ranking_score"]
     return features
 
 def build_feature_matrix(profile, schemes):
