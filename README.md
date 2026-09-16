@@ -63,3 +63,9 @@ Three load-inclusive SC inference runs averaged 5.032936 seconds across 3,397 sc
 ## Phase 8.5 relevance evidence sanity
 
 Structured domain or purpose matches are now classified as corroborated only when supported by scheme name/description text. Structured-only evidence is medium strength, generic overlap is weak, and contradictory domain evidence is explicitly recorded. Relevance evidence exposes source fields, strength, corroboration, and contradiction. In the SC manual API checks, generic business returned 25/weakly_relevant, agriculture returned 72.5/relevant, and transport returned 27.5/weakly_relevant. Three load-inclusive SC runs averaged 5.979209 seconds across 3,397 schemes.
+
+## Phase 8.6 intent/domain separation
+
+Business-domain evidence now activates only for business, enterprise, agriculture, transport, or comparable activity intent. Student and education profiles are represented through education and loan-purpose evidence instead of being labeled as business matches. SC/ST remains target-group evidence only. Missing or ambiguous intent remains unknown, and eligibility calculations are unchanged.
+
+Four real API smoke profiles returned HTTP 200 with valid JSON: SC education (top relevance 45, weakly relevant), SC agriculture (72.5, relevant), SC transport (27.5, weakly relevant), and generic SC business (25, weakly relevant). Three load-inclusive SC education inference runs averaged 6.324558 seconds across 3,397 schemes.

@@ -27,6 +27,7 @@ def generate_pair_features(profile, scheme):
     features["relevance_score"] = relevance["relevance_score"]
     features["relevance_evaluated"] = relevance["relevance_evaluated"]
     features["relevance_evidence"] = relevance["relevance_evidence"]
+    features["matched_relevance_groups"] = relevance["matched_relevance_groups"]
     features["relevance_tier"] = classify_relevance(relevance["relevance_score"], relevance["relevance_evaluated"], result["evidence_coverage"])
     features["target_group_match"] = target["target_group_match"]
     features["target_group_score"] = target["target_group_score"]
