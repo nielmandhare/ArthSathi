@@ -1,0 +1,4 @@
+scheme_id,scheme_name,min_age,max_age,max_income,social_categories,locations,education_requirements,business_types,loan_purposes,min_loan_amount,max_loan_amount,interest_rate,source_reference
+DEMO-001,Demo Enterprise Support,18,60,500000,OBC|SC|ST,ALL,secondary|graduate,tailoring|dairy,working_capital|asset_purchase,50000,500000,7.0,SYNTHETIC/DEMO
+DEMO-002,Demo Youth Innovation,21,35,1000000,ALL,Delhi|Karnataka,graduate,technology,expansion,200000,1000000,8.5,SYNTHETIC/DEMO
+DEMO-003,Demo Farm Support,18,65,,ST|SC,ALL,secondary|graduate,agriculture,working_capital,25000,300000,6.5,SYNTHETIC/DEMO

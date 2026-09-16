@@ -1,0 +1,5 @@
+# ArthSathi ML Phase 1
+
+This phase provides the data contract, validation, preprocessing, and deterministic splits. The canonical beneficiary fields are `beneficiary_id`, `age`, `income`, `location`, `social_category`, `education`, `business_type`, `loan_purpose`, `project_cost`, and `required_loan_amount`. Schemes use `scheme_id`, `scheme_name`, age/income limits, supported categories/locations/education/business types/purposes, loan limits, financial parameters, and `source_reference`.
+
+`data/*.csv` is explicitly `DEMO/SYNTHETIC`; it is not real government training data. Missing beneficiary values are intentional validation fixtures. Run `python -m ml.sample_pipeline` and `pytest` from the repository root. Phase 2 can import `load_*_data`, `validate_*_data`, `build_preprocessor`, `transform_data`, and `split_data`; fit preprocessing on training data and transform later splits with the fitted object.

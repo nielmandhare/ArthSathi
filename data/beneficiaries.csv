@@ -1,0 +1,5 @@
+beneficiary_id,age,income,location,social_category,education,business_type,loan_purpose,project_cost,required_loan_amount
+B001,28,240000,Maharashtra,OBC,graduate,tailoring,working_capital,180000,120000
+B002,45,,Karnataka,SC,secondary,dairy,asset_purchase,500000,350000
+B003,19,900000,Delhi,General,graduate,technology,expansion,1200000,800000
+B004,35,320000,,ST,secondary,agriculture,working_capital,250000,150000
