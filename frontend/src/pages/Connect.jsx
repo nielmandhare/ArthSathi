@@ -1,45 +1,67 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Landmark, MessageCircle, CalendarClock, ExternalLink, Navigation } from 'lucide-react';
+import { MapPin, Landmark, MessageCircle, ExternalLink, Navigation } from 'lucide-react';
 import { toast } from 'sonner';
-import { PARTNERS, MENTORS, ADPLIST, IMG } from '../data/mock';
+import { PARTNERS, IMG } from '../data/mock';
 import { PageWrap, Reveal, Stagger, staggerItem } from '../components/motion';
 import { PageHeader, TrustNote, ExtBadge } from '../components/widgets';
 
 const TYPE_CLS = { Bank: 'bg-pine text-white', NBFC: 'bg-clay text-white', MFI: 'bg-warning text-ink', SCA: 'bg-success text-white' };
+const ADPLIST_URL = process.env.REACT_APP_ADPLIST_URL || '';
 
-function PartnerMap({ active, setActive }) {
+const DEMO_MENTORS = [
+  { id: 'demo-m1', name: 'Aarav Mehta', domain: 'MSME Finance', expertise: 'Cash-flow planning · loan documentation · bank readiness', experience: '12 years supporting small manufacturing businesses', email: 'aarav.mehta@example.com', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=320&q=80' },
+  { id: 'demo-m2', name: 'Nisha Kulkarni', domain: 'Retail & Brand Strategy', expertise: 'Pricing · customer retention · local-to-online growth', experience: '10 years building Indian retail and D2C businesses', email: 'nisha.kulkarni@example.com', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=320&q=80' },
+  { id: 'demo-m3', name: 'Rohan Iyer', domain: 'Digital Operations', expertise: 'Digital payments · inventory · business process setup', experience: '9 years helping micro-enterprises adopt practical technology', email: 'rohan.iyer@example.com', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=320&q=80' },
+  { id: 'demo-m4', name: 'Kavya Deshmukh', domain: 'Women Entrepreneurship', expertise: 'Business planning · SHG operations · confidence building', experience: '14 years mentoring women-led enterprises across Maharashtra', email: 'kavya.deshmukh@example.com', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=320&q=80' },
+];
+
+// Fictional demo locations for the Connect experience; these are not official
+// government or scheme-authorized partner locations.
+const DEMO_PARTNER_LOCATIONS = {
+  'sbi-shivajinagar': { address: 'Demo location, Shivajinagar, Pune', latitude: 18.5308, longitude: 73.8475, category: 'Demo bank' },
+  'mavim-pune': { address: 'Demo location, Deccan Gymkhana, Pune', latitude: 18.5167, longitude: 73.8383, category: 'Demo SCA' },
+  'bom-deccan': { address: 'Demo location, Deccan Gymkhana, Pune', latitude: 18.5133, longitude: 73.8395, category: 'Demo bank' },
+  'tata-capital': { address: 'Demo location, FC Road, Pune', latitude: 18.5236, longitude: 73.8417, category: 'Demo NBFC' },
+  'annapurna-mfi': { address: 'Demo location, Kothrud, Pune', latitude: 18.5074, longitude: 73.8077, category: 'Demo MFI' },
+};
+
+const MAP_BOUNDS = { west: 73.79, east: 73.89, south: 18.48, north: 18.58 };
+const mapPosition = ({ latitude, longitude }) => ({
+  left: `${((longitude - MAP_BOUNDS.west) / (MAP_BOUNDS.east - MAP_BOUNDS.west)) * 100}%`,
+  top: `${((MAP_BOUNDS.north - latitude) / (MAP_BOUNDS.north - MAP_BOUNDS.south)) * 100}%`,
+});
+
+function googleMapsUrl({ name, address, latitude, longitude }) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name}, ${address}`)}&query_place_id=&center=${latitude},${longitude}`;
+}
+
+function PartnerMap({ partners, active, setActive }) {
   return (
-    <div className="grain relative h-[380px] overflow-hidden rounded-3xl bg-pine lg:h-full lg:min-h-[560px]" data-testid="partner-map" role="img" aria-label="Stylised map of Pune showing participating channel partners">
-      <svg className="absolute inset-0 h-full w-full opacity-40" viewBox="0 0 600 560" preserveAspectRatio="none">
-        <path d="M-20 180 C 120 140, 240 240, 400 190 S 620 260, 640 220" stroke="#F4F1EA" strokeWidth="10" fill="none" opacity="0.25" />
-        <path d="M120 -20 C 160 140, 90 300, 200 420 S 260 560, 240 600" stroke="#F4F1EA" strokeWidth="7" fill="none" opacity="0.18" />
-        <path d="M-20 400 C 180 360, 320 460, 640 380" stroke="#F4F1EA" strokeWidth="6" fill="none" opacity="0.15" />
-        <path d="M420 -20 C 380 160, 480 300, 420 580" stroke="#F4F1EA" strokeWidth="5" fill="none" opacity="0.12" />
-        <path d="M-20 90 C 200 60, 380 120, 640 70" stroke="#2A9D8F" strokeWidth="14" fill="none" opacity="0.22" />
-      </svg>
-      <span className="absolute left-[52%] top-[46%] flex flex-col items-center" aria-hidden>
+    <div className="relative h-[380px] overflow-hidden rounded-3xl bg-sand lg:h-full lg:min-h-[560px]" data-testid="partner-map" role="region" aria-label="Pune map showing fictional demo partner locations">
+      <iframe title="Pune map" className="absolute inset-0 h-full w-full border-0" src="https://www.openstreetmap.org/export/embed.html?bbox=73.79%2C18.48%2C73.89%2C18.58&layer=mapnik" />
+      <div className="pointer-events-none absolute inset-0 bg-pine/5" />
+      <span className="absolute left-[58%] top-[49%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center" aria-hidden>
         <span className="rounded-full bg-sand px-2.5 py-1 text-[10px] font-bold text-pine shadow-lg">You · Shivajinagar</span>
         <span className="mt-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-clay shadow" />
       </span>
-      {PARTNERS.map((p) => (
+      {partners.map((p) => (
         <button
           key={p.id}
           onClick={() => setActive(p.id)}
           data-testid={`map-pin-${p.id}`}
-          aria-label={`${p.name}, ${p.distance}`}
-          className="group absolute -translate-x-1/2 -translate-y-1/2"
-          style={{ left: `${p.x}%`, top: `${p.y * 0.75 + 8}%` }}
+          aria-label={`${p.name}, ${p.address}`}
+          className="group pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2"
+          style={mapPosition(p)}
         >
-          <span className={`absolute inset-0 rounded-full ${active === p.id ? 'animate-pin-ping bg-clay' : 'group-hover:animate-pin-ping bg-sand/50'}`} />
           <span className={`relative flex h-9 w-9 items-center justify-center rounded-full border-2 shadow-lg transition-transform duration-300 group-hover:scale-110 ${active === p.id ? 'border-white bg-clay text-white scale-110' : 'border-pine bg-sand text-pine'}`}>
             <Landmark size={15} />
           </span>
           {active === p.id && (
             <motion.span initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="absolute left-1/2 top-full z-10 mt-2 w-44 -translate-x-1/2 rounded-xl bg-white p-3 text-left shadow-xl">
               <span className="block text-xs font-bold text-ink">{p.name}</span>
-              <span className="mt-0.5 block text-[11px] text-sage">{p.type} · {p.distance}</span>
+              <span className="mt-0.5 block text-[11px] text-sage">{p.category} · Demo location</span>
             </motion.span>
           )}
         </button>
@@ -49,14 +71,15 @@ function PartnerMap({ active, setActive }) {
 }
 
 function Partners() {
-  const [active, setActive] = useState(PARTNERS[0].id);
-  const activePartner = useMemo(() => PARTNERS.find((p) => p.id === active), [active]);
+  const partners = useMemo(() => PARTNERS.map((partner) => ({ ...partner, ...DEMO_PARTNER_LOCATIONS[partner.id] })), []);
+  const [active, setActive] = useState(partners[0].id);
+  const activePartner = useMemo(() => partners.find((p) => p.id === active), [partners, active]);
   return (
     <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
-      <Reveal><PartnerMap active={active} setActive={setActive} /></Reveal>
+      <Reveal><PartnerMap partners={partners} active={active} setActive={setActive} /></Reveal>
       <div className="space-y-4">
         <Stagger className="space-y-4" gap={0.06}>
-          {PARTNERS.map((p) => (
+          {partners.map((p) => (
             <motion.button
               variants={staggerItem}
               key={p.id}
@@ -68,13 +91,14 @@ function Partners() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-display text-[15px] font-bold">{p.name}</h3>
+                    <span className="rounded-full bg-sand px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-sage">Fictional demo</span>
                     {p.recommended && <span className="rounded-full bg-clay/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-clay">Recommended</span>}
                   </div>
                   <p className="mt-1 flex items-center gap-2 text-xs text-sage"><MapPin size={12} /> {p.area} · {p.distance} away</p>
                 </div>
                 <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${TYPE_CLS[p.type]}`}>{p.type}</span>
               </div>
-              <p className="mt-3 text-xs text-sage">Supports: {p.schemes.length} of your schemes · <span className="font-semibold text-ink">{p.capacity}</span></p>
+              <p className="mt-3 text-xs text-sage">Demo profile · Supports: {p.schemes.length} of your schemes · <span className="font-semibold text-ink">{p.capacity}</span></p>
             </motion.button>
           ))}
         </Stagger>
@@ -85,26 +109,28 @@ function Partners() {
               {activePartner.reasons.map((r) => <li key={r} className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-clay" />{r}</li>)}
             </ul>
             <button
-              onClick={() => toast('Approach this partner', { description: `${activePartner.name} — carry your prepared documents. Final processing happens at their desk.` })}
+              onClick={() => window.open(googleMapsUrl(activePartner), '_blank', 'noopener,noreferrer')}
               className="btn-primary mt-4 w-full !h-11"
               data-testid="partner-approach-btn"
             >
-              View / approach partner <ExternalLink size={14} />
+              View / approach demo location <ExternalLink size={14} />
             </button>
           </Reveal>
         )}
-        <TrustNote tone="info">Partner suggestions are routing help based on proximity, scheme participation and reported capacity — not a guarantee of service or sanction.</TrustNote>
+        <TrustNote tone="info">These partner profiles and locations are fictional demo data for navigation testing, not government-authorized partner listings.</TrustNote>
       </div>
     </div>
   );
 }
 
 function Mentors() {
+  const [selectedMentor, setSelectedMentor] = useState(null);
+  const [message, setMessage] = useState('');
   return (
     <div className="space-y-8">
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <Stagger className="grid gap-5 sm:grid-cols-2">
-          {MENTORS.map((m) => (
+          {DEMO_MENTORS.map((m) => (
             <motion.div variants={staggerItem} key={m.id} className="card-premium group p-6" data-testid={`mentor-card-${m.id}`}>
               <div className="flex items-center gap-4">
                 <div className="img-frame h-14 w-14 rounded-full border-2 border-sand">
@@ -118,7 +144,7 @@ function Mentors() {
               <p className="mt-4 text-[13px] leading-relaxed text-sage"><strong className="text-ink/80">Expertise:</strong> {m.expertise}</p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-sage"><strong className="text-ink/80">Experience:</strong> {m.experience}</p>
               <button
-                onClick={() => toast.success(`Request sent to ${m.name}`, { description: 'They typically respond within 2 working days.' })}
+                onClick={() => { setSelectedMentor(m); setMessage(''); }}
                 className="btn-ghost mt-5 w-full !h-11 !text-[13px]"
                 data-testid={`mentor-connect-${m.id}`}
               >
@@ -131,7 +157,24 @@ function Mentors() {
           <img src={IMG.hero} alt="Experienced Indian shop owner who mentors new entrepreneurs" className="aspect-[3/4]" loading="lazy" />
         </Reveal>
       </div>
-      <TrustNote>Domain mentors are matched to your business field — people who have actually run tailoring units, boutiques and MSME loan files.</TrustNote>
+      <TrustNote>These are fictional demo profiles for exploring the contact flow, not government employees or official representatives.</TrustNote>
+      {selectedMentor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4" role="dialog" aria-modal="true" aria-label={`Contact ${selectedMentor.name}`}>
+          <div className="card-premium w-full max-w-lg bg-white p-6 sm:p-8">
+            <div className="flex items-center gap-4">
+              <img src={selectedMentor.avatar} alt={selectedMentor.name} className="h-16 w-16 rounded-full object-cover" />
+              <div><h2 className="font-display text-xl font-bold">Contact {selectedMentor.name}</h2><p className="text-sm font-semibold text-clay">{selectedMentor.domain}</p></div>
+            </div>
+            <p className="mt-4 text-sm text-sage">{selectedMentor.expertise}. {selectedMentor.experience}.</p>
+            <p className="mt-2 text-sm text-sage">Demo email: <strong className="text-ink">{selectedMentor.email}</strong></p>
+            <textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Write a demo message" className="mt-5 min-h-28 w-full rounded-xl border border-border p-3 text-sm outline-none focus:border-pine focus:ring-2 focus:ring-pine/15" data-testid="mentor-message-input" />
+            <div className="mt-4 flex justify-end gap-2">
+              <button onClick={() => setSelectedMentor(null)} className="btn-ghost">Close</button>
+              <button onClick={() => toast('Demo message prepared', { description: 'No message was delivered. A messaging backend is not configured.' })} className="btn-primary" data-testid="mentor-send-btn">Send demo message</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -145,36 +188,18 @@ function AdpList() {
             <h3 className="font-display text-lg font-bold">Broader mentoring via ADPList</h3>
             <ExtBadge name="ADPList" />
           </div>
-          <p className="mt-1.5 max-w-xl text-sm text-sage">Beyond local domain experts — career, strategy, tech and marketing mentors from ADPList's global community. Booking happens on their platform.</p>
+          <p className="mt-1.5 max-w-xl text-sm text-sage">ADPList is an external mentoring service. The portal destination must be configured before booking can open.</p>
+          <button
+            onClick={() => ADPLIST_URL ? window.open(ADPLIST_URL, '_blank', 'noopener,noreferrer') : toast('ADPList destination is not configured', { description: 'Set REACT_APP_ADPLIST_URL to enable the external portal link.' })}
+            className="btn-primary shrink-0"
+            disabled={!ADPLIST_URL}
+            data-testid="adplist-open-btn"
+          >
+            Open ADPList <ExternalLink size={14} />
+          </button>
         </div>
       </div>
-      <Stagger className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        {ADPLIST.map((m) => (
-          <motion.div variants={staggerItem} key={m.id} className="card-premium p-6" data-testid={`adplist-card-${m.id}`}>
-            <div className="flex items-center gap-4">
-              <div className="img-frame h-14 w-14 rounded-full border-2 border-sand">
-                <img src={m.avatar} alt={m.name} loading="lazy" />
-              </div>
-              <div>
-                <h3 className="font-display text-[15px] font-bold">{m.name}</h3>
-                <p className="text-xs font-semibold text-pine">{m.category}</p>
-              </div>
-            </div>
-            <p className="mt-4 text-[13px] leading-relaxed text-sage">{m.detail}</p>
-            <p className="mt-1.5 text-xs text-sage">{m.location}</p>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="rounded-full bg-sand px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-pine">ADPList Mentor</span>
-              <button
-                onClick={() => toast('Opening ADPList (external)', { description: `You would now book a session with ${m.name} on adplist.org.` })}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-clay hover:underline"
-                data-testid={`adplist-book-${m.id}`}
-              >
-                <CalendarClock size={13} /> Book session
-              </button>
-            </div>
-          </motion.div>
-        ))}
-      </Stagger>
+      <TrustNote>ArthSathi does not host or represent ADPList. Booking, profiles and availability are handled entirely on the configured external portal.</TrustNote>
     </div>
   );
 }
