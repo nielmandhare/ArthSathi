@@ -61,7 +61,7 @@ export default function Applications() {
             <p className="mt-3 text-sm leading-relaxed text-sage">
               <strong className="num">{readyCount} of {allRows.length}</strong> applications are complete. Submission happens
               through the <strong>applicable external application channels</strong> — the scheme portal or your channel partner.
-              SahaySetu prepares your file; it does not act as the government authority.
+              ArthSathi prepares your file; it does not act as the government authority.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link to="/connect" className="btn-primary" data-testid="submit-next-partner">Find where to apply <ArrowRight size={15} /></Link>
@@ -222,7 +222,7 @@ export default function Applications() {
 
         <TrustNote>
           <strong>Submission is external.</strong> Applications are submitted through the applicable scheme portal or channel
-          partner. SahaySetu prepares and organises your information — it never impersonates the authority.
+          partner. ArthSathi prepares and organises your information — it never impersonates the authority.
         </TrustNote>
       </section>
     </PageWrap>

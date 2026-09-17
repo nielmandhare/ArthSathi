@@ -16,28 +16,10 @@ function emi(p, annualRate, years) {
   return (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 }
 
-export default function Calculator() {
-  const scheme = useScheme();
-  const { state } = useApp();
-  const [income, setIncome] = useState(state.profile.monthlyIncome);
-  const [oblig, setOblig] = useState(state.profile.existingEmi);
-  const [loan, setLoan] = useState(Math.min(state.requirement.loanAmount, scheme?.maxLoan ?? 0));
-  const [rate, setRate] = useState(scheme?.rate ?? 0);
-  const [years, setYears] = useState(scheme?.tenureYears ?? 0);
+const GENERIC_ANNUAL_RATE = 7;
 
-  const res = useMemo(() => {
-    const e = Math.round(emi(loan, rate, years));
-    const remaining = income - oblig - e;
-    const disposable = income - oblig;
-    const ratio = disposable > 0 ? e / disposable : 1;
-    const comfortable = remaining >= 0 && ratio <= 0.4;
-    return { e, remaining, comfortable };
-  }, [income, oblig, loan, rate, years]);
-
-  if (!scheme) return <PageWrap><UnknownScheme /></PageWrap>;
-  if (scheme.scheme_id) return <PageWrap><PageHeader eyebrow="Financial information" title={`Financial information for ${scheme.scheme_name}`} desc="Unsupported financial terms are not estimated." step="financial" /><SchemeNav /><LiveCalculator scheme={scheme} /></PageWrap>;
-
-  const Field = ({ label, value, onChange, prefix, suffix, schemeParam }) => (
+function Field({ label, value, onChange, prefix, suffix, schemeParam }) {
+  return (
     <label className="block" data-testid={`calc-field-${label.toLowerCase().replace(/\s|\(|\)|%/g, '-')}`}>
       <span className="mb-1.5 flex items-center justify-between text-xs font-semibold text-sage">
         {label}
@@ -55,13 +37,35 @@ export default function Calculator() {
       </div>
     </label>
   );
+}
+
+export default function Calculator() {
+  const scheme = useScheme();
+  const { state } = useApp();
+  const [income, setIncome] = useState(state.profile.monthlyIncome);
+  const [oblig, setOblig] = useState(state.profile.existingEmi);
+  const [loan, setLoan] = useState(state.requirement.loanAmount);
+  const [rate, setRate] = useState(GENERIC_ANNUAL_RATE);
+  const [years, setYears] = useState(scheme?.tenureYears ?? 0);
+
+  const res = useMemo(() => {
+    const e = Math.round(emi(loan, rate, years));
+    const remaining = income - oblig - e;
+    const disposable = income - oblig;
+    const ratio = disposable > 0 ? e / disposable : 1;
+    const comfortable = remaining >= 0 && ratio <= 0.4;
+    return { e, remaining, comfortable };
+  }, [income, oblig, loan, rate, years]);
+
+  if (!scheme) return <PageWrap><UnknownScheme /></PageWrap>;
+  if (scheme.scheme_id) return <PageWrap><PageHeader eyebrow="Financial information" title={`Financial information for ${scheme.scheme_name}`} desc="Unsupported financial terms are not estimated." step="financial" /><SchemeNav /><LiveCalculator scheme={scheme} /></PageWrap>;
 
   return (
     <PageWrap>
       <PageHeader
         eyebrow="Step 8 · Know before you commit"
         title="Can you afford this monthly payment?"
-        desc={`Tuned to ${scheme.name} parameters. Every number here is an estimate from what you enter — not an official offer.`}
+        desc="A generic estimate using a 7% annual interest assumption — not an official scheme offer."
         step="financial"
       >
         <FreshnessBadge iso={scheme.lastVerified} />
@@ -75,7 +79,7 @@ export default function Calculator() {
             <Field label="Monthly income" value={income} onChange={setIncome} prefix="₹" />
             <Field label="Existing monthly EMIs" value={oblig} onChange={setOblig} prefix="₹" />
             <Field label="Loan you want" value={loan} onChange={setLoan} prefix="₹" />
-            <Field label="Interest rate (% p.a.)" value={rate} onChange={setRate} suffix="% p.a." schemeParam />
+            <Field label="Generic interest assumption (% p.a.)" value={rate} onChange={setRate} suffix="% p.a." />
             <Field label="Repayment period" value={years} onChange={setYears} suffix="years" schemeParam />
             <div className="flex items-end">
               <div className="w-full rounded-xl bg-sand p-3.5 text-[13px] text-pine">

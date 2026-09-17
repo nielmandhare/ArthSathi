@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useApp } from '../context/AppContext';
 
 const Shell = ({ title, children }) => (
   <section className="container-x mt-10"><div className="card-premium p-6 sm:p-8"><h2 className="font-display text-xl font-bold">{title}</h2>{children}</div></section>
@@ -25,7 +27,41 @@ export function LiveDocuments({ scheme }) {
 }
 
 export function LiveCalculator({ scheme }) {
-  return <Shell title={`Financial information for ${scheme.scheme_name}`}><p className="mt-3 text-sm text-sage">Interest rate, tenure, repayment terms, and other calculator metadata are not provided by the recommendation response.</p><p className="mt-3 text-sm text-sage">No unsupported EMI estimate is shown.</p><Actions id={scheme.scheme_id} /></Shell>;
+  const { state } = useApp();
+  const [income, setIncome] = useState(state.profile.monthlyIncome);
+  const [oblig, setOblig] = useState(state.profile.existingEmi);
+  const [loan, setLoan] = useState(state.requirement.loanAmount);
+  const [years, setYears] = useState('');
+  const emi = useMemo(() => {
+    const principal = Number(loan);
+    const months = Number(years) * 12;
+    const monthlyRate = 7 / 1200;
+    if (!principal || !months) return 0;
+    return Math.round((principal * monthlyRate * ((1 + monthlyRate) ** months)) / (((1 + monthlyRate) ** months) - 1));
+  }, [loan, years]);
+  const remaining = Number(income) - Number(oblig) - emi;
+  return (
+    <Shell title={`Generic calculator for ${scheme.scheme_name}`}>
+      <p className="mt-3 text-sm text-sage">Scheme-specific interest rates, tenure, repayment terms and loan limits are not provided by the recommendation response.</p>
+      <p className="mt-2 text-sm font-semibold text-pine">Generic calculator assumption: 7% annual interest</p>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <LiveField label="Monthly income" value={income} onChange={setIncome} />
+        <LiveField label="Existing monthly EMIs" value={oblig} onChange={setOblig} />
+        <LiveField label="Required loan amount" value={loan} onChange={setLoan} />
+        <LiveField label="Repayment period (years)" value={years} onChange={setYears} />
+      </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <Info label="Estimated generic EMI" value={emi ? `₹${emi.toLocaleString('en-IN')}` : 'Enter a repayment period'} />
+        <Info label="Income left after EMI" value={emi ? `₹${remaining.toLocaleString('en-IN')}` : 'Not calculated'} />
+      </div>
+      <p className="mt-4 text-xs text-sage">This is a generic estimate from your inputs, not an official government or lender offer.</p>
+      <Actions id={scheme.scheme_id} />
+    </Shell>
+  );
+}
+
+function LiveField({ label, value, onChange }) {
+  return <label className="block"><span className="mb-1.5 block text-xs font-semibold text-sage">{label}</span><input type="number" value={value} onChange={(event) => onChange(event.target.value)} className="num h-12 w-full rounded-xl border border-border bg-white px-4 font-display font-bold outline-none focus:border-pine focus:ring-2 focus:ring-pine/15" /></label>;
 }
 
 function Info({ label, value }) { return <div className="rounded-xl bg-sand p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sage">{label}</p><p className="mt-1 font-bold">{value ?? 'Not provided'}</p></div>; }

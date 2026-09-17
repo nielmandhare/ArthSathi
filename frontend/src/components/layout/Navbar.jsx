@@ -25,7 +25,7 @@ export default function Navbar() {
               <Sprout size={18} />
             </span>
             <span className="leading-none">
-              <span className="block font-display text-[17px] font-extrabold tracking-tight text-ink">SahaySetu</span>
+              <span className="block font-display text-[17px] font-extrabold tracking-tight text-ink">ArthSathi</span>
               <span className="block text-[10px] font-medium uppercase tracking-[0.18em] text-sage">Beneficiary Platform</span>
             </span>
           </Link>

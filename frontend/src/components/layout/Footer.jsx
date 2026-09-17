@@ -9,7 +9,7 @@ export default function Footer() {
         <div>
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sand text-pine"><Sprout size={18} /></span>
-            <span className="font-display text-lg font-extrabold">SahaySetu</span>
+            <span className="font-display text-lg font-extrabold">ArthSathi</span>
           </div>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-sand/70">
             A guided journey from “I need support” to “I know what fits, why, what it costs and where to go.”
@@ -40,7 +40,7 @@ export default function Footer() {
           </div>
           <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-sand/60">
             <ShieldCheck size={14} className="mt-0.5 shrink-0" />
-            These are external services. SahaySetu guides you to them but does not represent them.
+            These are external services. ArthSathi guides you to them but does not represent them.
           </p>
         </div>
       </div>

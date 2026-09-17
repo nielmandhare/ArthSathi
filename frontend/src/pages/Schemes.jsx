@@ -140,7 +140,7 @@ export default function Schemes() {
                         <h3 className="font-display text-lg font-bold leading-snug">{s.scheme_name}</h3>
                         <p className="mt-0.5 text-xs text-sage">Scheme ID: {s.scheme_id}</p>
                       </div>
-                      <div className="text-right"><p className="num font-display text-3xl font-bold text-pine">{s.match_score}</p><p className="text-[10px] text-sage">match score</p></div>
+                      <div className="pt-6 text-right"><p className="num font-display text-3xl font-bold text-pine">{s.match_score}</p><p className="text-[10px] text-sage">match score</p></div>
                     </div>
                     <p className="text-sm leading-relaxed text-sage">{s.reasons?.[0] || 'Recommendation details are available in the scheme explanation.'}</p>
                     <div className="grid grid-cols-2 gap-3 border-t border-border pt-4 text-xs">
